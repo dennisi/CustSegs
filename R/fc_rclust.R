@@ -31,7 +31,8 @@ fc_rclust <- function(x, k, fc_cont, nrep=100, fc_family,
     set.seed(fc_seed)
     cli <- flexclust::kcca(x, k, save.data = TRUE,
                            control = fc_cont, family = kccaFamily(fc_family))
-    cli.re <- CustSegs::fc_reorder(cli, orderby = "decending size")
+    # cli.re <- CustSegs::fc_reorder(cli, orderby = "decending size")
+    cli.re <- fc_reorder(cli, orderby = "decending size")
     cli_info <- cli.re@clusinfo %>%
       dplyr::mutate(clust_num = row_number(),
                     clust_rank = min_rank(desc(size))) %>%

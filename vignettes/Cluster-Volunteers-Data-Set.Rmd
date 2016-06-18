@@ -17,7 +17,9 @@ library(stringr)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-library(CustSegs)
+# library(CustSegs)
+source(file = 'C:/Users/Dennis/git/CustSegs/R/fc_reorder.R')
+source(file = 'C:/Users/Dennis/git/CustSegs/R/fc_rclust.R')
 data("volunteers")
 vol_ch <- volunteers[-(1:2)]
 ```
@@ -257,32 +259,39 @@ Taking the value pair (k = `r cli_best[1, 1]`, seed = `r cli_best[1, 2]`) from s
 
 ``` {r echo=FALSE, fig.width = 8, fig.height = 6, cache=TRUE}
 clusters <- NULL
-for(k in 2:15) {
-  cat("k =", k, "\n")
+Sys.time()
+system.time(for (k in 2:15) {
+  cat("k=", k, "\n")
   num_clusters <- k
-  cli <- fc_rclust(vol.mat, k=num_clusters, fc_cont, nrep=200, fc_family)
+  cli <- fc_rclust(vol.mat, k = num_clusters, fc_cont, nrep = 200, fc_family)
   cli
   head(cli$best, 3)
   fc_seed <- as.integer(cli$best[1, 2])
   x <- try(set.seed(fc_seed))
-  if(!is.null(x)) {
-    cat("set.seed error, invalid cli$best. Skipping k = ", k)
+  if (!is.null(x)) {
+    cat("set.seed error, invalid cli$best. Skipping k= ", k)
     next()
   }
   set.seed(fc_seed)
-  vol.cl <- kcca(vol.mat, k = num_clusters, save.data = TRUE,
-                 control = fc_cont, family = kccaFamily(fc_family))
+  vol.cl <- kcca(
+    vol.mat, k = num_clusters, save.data = TRUE,
+    control = fc_cont, family = kccaFamily(fc_family)
+  )
   vol.cl <- fc_reorder(vol.cl)
-  clusters <- rbind(clusters, data.frame(k = k, seed = fc_seed, cluster = vol.cl@cluster))
+  clusters <-
+    rbind(clusters, data.frame(
+      k = k, seed = fc_seed, cluster = vol.cl@cluster
+    ))
   vol.pca <- prcomp(vol.mat)      ## plot on first two principal components
-  plot(vol.cl, data = vol.mat, project = vol.pca,
-             main = paste0("Segment Seperation Plot, k=", num_clusters, ", seed=", fc_seed))
-  bc <- barchart(vol.cl, strip.prefix = "#", shade = TRUE,  layout = c(num_clusters, 1),
-                 main = paste0("Segment Profile Plot, k=", num_clusters, ", seed=", fc_seed))
+  plot(
+    vol.cl, data = vol.mat, project = vol.pca,
+    main = paste0("Segment Seperation Plot, k=", num_clusters, ", seed=", fc_seed)
+  )
+  bc <- barchart(
+    vol.cl, strip.prefix = "#", shade = TRUE,  layout = c(num_clusters, 1),
+    main = paste0("Segment Profile Plot, k=", num_clusters, ", seed=", fc_seed)
+  )
   print(bc)
-}
+})
+Sys.time()
 ```
-
-
-
-
